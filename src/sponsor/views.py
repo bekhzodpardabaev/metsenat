@@ -1,5 +1,6 @@
 from django.db.models import F, Sum
 from rest_framework import generics, status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Sponsor, SponsorsToTheStudent, Student, University
@@ -98,7 +99,7 @@ class SponsorsAddStudentView(generics.CreateAPIView):
         all_sum = 0
         for i in student_sponsor:
             all_sum += i.allocated_sum
-        if serializer.validated_data['allocated_sum'] > pk.contract - all_sum:
+        if serializer.validated_data['allocated_sum'] > pk.contract - student_sponsor.all_sum:
             raise ValueError("The money allocated to the student exceeded the contract amount")
         else:
             serializer.validated_data['student'] = pk

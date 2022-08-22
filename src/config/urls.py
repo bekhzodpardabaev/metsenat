@@ -18,6 +18,7 @@ from django.urls import path, include
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view as swagger_get_schema_view
 
+from users.views import RandomListView
 
 schema_view = swagger_get_schema_view(
     openapi.Info(
@@ -32,5 +33,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('sponsor.urls')),
     path('user/', include('users.urls')),
-    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema")
+    path('swagger/', schema_view.with_ui('swagger', cache_timeout=0), name="swagger-schema"),
+    path('random/', RandomListView.as_view())
 ]

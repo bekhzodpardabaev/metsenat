@@ -14,3 +14,9 @@ class CustomUserSerializer(serializers.ModelSerializer):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({'password': "Password's didn't match"})
         return attrs
+
+
+class UserDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomUser
+        fields = ('username', 'password', 'is_staff', 'is_active')
