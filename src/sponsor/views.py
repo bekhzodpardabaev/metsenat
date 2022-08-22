@@ -1,6 +1,5 @@
-from django.db.models import F, Sum
-from rest_framework import generics, status
-from rest_framework.permissions import IsAuthenticated
+from django.db.models import F, Sum, Count
+from rest_framework import generics
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from .models import Sponsor, SponsorsToTheStudent, Student, University
@@ -21,11 +20,6 @@ class SponsorsListView(generics.ListAPIView):
         date=F('sponsor_introduction__date'),
         status=F('sponsor_introduction__status')
     ).prefetch_related('sponsors_student').annotate(spent_sum=Sum('sponsors_student__allocated_sum'))
-    # queryset = SponsorIntroduction.objects.select_related("sponsor").annotate(
-    #         name=F("sponsor__name"),
-    #         phone_number=F("sponsor__phone_number"),
-    #         payment=F("sponsor__payment")
-    # )
     filter_backends = (filters.DjangoFilterBackend,)
     filterset_fields = ('sponsor_introduction__status', 'payment', 'sponsor_introduction__date')
 
@@ -114,21 +108,12 @@ class SponsorsOfStudentDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 class DashboardView(APIView):
     def get(self, request):
-        student = Student.objects.all()
-        all_request_sum = 0
-        for i in student:
-            all_request_sum += i.contract
-        sponsor_of_student = SponsorsToTheStudent.objects.all()
-        all_paid_sum = 0
-        for i in sponsor_of_student:
-            all_paid_sum += i.allocated_sum
-        sponsor = Sponsor.objects.all()
-        all_student = 0
-        all_sponsor = 0
-        for i in sponsor:
-            all_sponsor += 1
-        for i in student:
-            all_student += 1
+        student = Student.objects.aggregate(all_request_sum=Sum('contract'), all_student=Count('id'))
+        sponsor_of_student = SponsorsToTheStudent.objects.aggregate(all_paid_sum=Sum('allocated_sum'))
+        all_request_sum = student['all_request_sum']
+        all_paid_sum = sponsor_of_student['all_paid_sum']
+        all_student = student['all_student']
+        all_sponsor = Sponsor.objects.count()
 
         return Response({'all_request_sum': all_request_sum,
                          'all_paid_sum': all_paid_sum,
